@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TactixPro - Plataforma Integral de Entrenamiento & Formación DT</title>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pitch: {
+                            DEFAULT: '#15803d',
+                            dark: '#0f5128',
+                            light: '#22c55e',
+                            accent: '#4ade80'
+                        },
+                        charcoal: {
+                            DEFAULT: '#121212',
+                            card: '#1e1e1e',
+                            border: '#2a2a2a',
+                            hover: '#282828'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: #f3f4f6;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a2a;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #15803d;
+        }
+        .pitch-pattern {
+            background-color: #0f5128;
+            background-image: repeating-linear-gradient(
+                0deg,
+                #0f5128,
+                #0f5128 30px,
+                #135e2e 30px,
+                #135e2e 60px
+            );
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; }
+            .print-card { border: 1px solid #ccc !important; background: white !important; color: black !important; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const Icon = ({ name, className = "w-5 h-5" }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name, className]);
+
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const PRESET_DRILLS = [
+            {
+                id: 'drill-1',
+                title: 'Duelos 1v1 con Transición Defensiva Inmediata',
+                category: 'Amateur / Juveniles',
+                focus: 'Duelos 1v1 / Transiciones',
+                type: 'Sesión Única',
+                imageUrl: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=800&q=80',
+                warmup: 'Calentamiento dinámico con balón en parejas + movilidad articular (12 min).',
+                mainTask: 'En un rectángulo de 25x15m, el atacante busca rebasar al defensor y definir en miniarcos. Si el defensor roba, debe salir conduciendo sobre la línea divisoria opuesta inmediatamente. El atacante perdedor realiza presión tras pérdida instantánea.',
+                applicationGame: 'Juego reducido 3v3 con comodín exterior. Máximo 2 toques por jugador. Transición rápida ataque-defensa.',
+                cooldown: 'Estiramientos estáticos y charla reflexiva sobre el tiempo de reacción tras la pérdida (10 min).',
+                fieldData: {
+                    dimensions: '25m x 15m con 2 miniarcos en extremos.',
+                    players: '8 a 12 jugadores (rotación rápida).',
+                    materials: 'Conos, platos, miniarcos, pecheras de 2 colores, balones.',
+                    variations: 'Añadir un comodín ofensivo (2v1) o limitar el tiempo de ataque a 8 segundos.',
+                    positions: [
+                        { id: 1, type: 'attacker', x: 20, y: 50, label: 'A1' },
+                        { id: 2, type: 'defender', x: 70, y: 50, label: 'D1' },
+                        { id: 3, type: 'joker', x: 50, y: 15, label: 'C1' },
+                        { id: 4, type: 'ball', x: 25, y: 50, label: '' }
+                    ]
+                },
+                guidedQuestions: [
+                    "¿Hacia dónde te conviene orientar al atacante para cerrarle el perfil hábil?",
+                    "Una vez que pierdes la pelota, ¿cuál es tu primera acción mental: lamentarte o reaccionar?",
+                    "¿Qué distancia de contención debes mantener según la velocidad del rival?"
+                ]
+            },
+            {
+                id: 'drill-2',
+                title: 'Contención de Espaldas y Perfilación de Laterales',
+                category: 'Juveniles / Primera',
+                focus: 'Perfilación y Hábitos Posicionales',
+                type: 'Sesión Única',
+                imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=800&q=80',
+                warmup: 'Rondo 4v2 con énfasis en perfil abierto de apoyos exteriores (15 min).',
+                mainTask: 'Circuito de salida de balón desde el central hacia el lateral. El extremo rival presiona de espaldas. El lateral debe recibir perfilado a 45° dando la espalda a la banda para tener visión total del campo y filtrar pase interior o proyectarse.',
+                applicationGame: 'Partido condicionado 8v8. Los goles valen doble si la jugada previa proviene de un cambio de orientación tras una recepción perfilada del lateral.',
+                cooldown: 'Trote suave y retroalimentación interactiva en grupo sobre visión periférica (10 min).',
+                fieldData: {
+                    dimensions: 'Medio campo (40x30m).',
+                    players: '14 a 16 jugadores.',
+                    materials: 'Conos de delimitación, estacas, balones.',
+                    variations: 'Incorporar presión de un interno rival para forzar el uso del tercer hombre.',
+                    positions: [
+                        { id: 1, type: 'attacker', x: 15, y: 80, label: 'Lat' },
+                        { id: 2, type: 'attacker', x: 15, y: 50, label: 'DF' },
+                        { id: 3, type: 'defender', x: 30, y: 75, label: 'EXT' },
+                        { id: 4, type: 'attacker', x: 45, y: 50, label: 'MC' },
+                        { id: 5, type: 'ball', x: 18, y: 52, label: '' }
+                    ]
+                },
+                guidedQuestions: [
+                    "Al recibir en la banda, ¿puedes ver la línea de toque y el centro del campo simultáneamente?",
+                    "¿Qué pie debes usar para el primer control si quieres avanzar?",
+                    "Si el rival te tapona la banda, ¿qué línea de pase interior se libera?"
+                ]
+            },
+            {
+                id: 'drill-3',
+                title: 'Juego Aéreo Defensivo y Rechazos Dirigidos',
+                category: 'Primera / Amateur',
+                focus: 'Físico-Técnico',
+                type: 'Sesión Única',
+                imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=800&q=80',
+                warmup: 'Trabajo de salto unipodal, impulsos e interpretaciones de trayectoria con balón medicinal ligero (15 min).',
+                mainTask: 'Lanzamientos de centros laterales desde distintos ángulos. Centrales realizan rechazo de cabeza buscando zonas de seguridad predeterminadas (bandas o zona media lejana) mientras delanteros ejercen oposición real.',
+                applicationGame: 'Ataque vs Defensa en 1/2 cancha (6v6 + GK). El equipo defensor suma 1 punto si despeja hacia zonas delimitadas por conos en campo medio.',
+                cooldown: 'Regenerativo en césped, estiramientos y crioterapia o relajación (15 min).',
+                fieldData: {
+                    dimensions: 'Área grande y zona pre-área (35x40m).',
+                    players: '10 jugadores + 2 Arqueros.',
+                    materials: 'Muñecos/barreras, balones, conos de zona objetivo.',
+                    variations: 'Añadir dobles marcas o centros rasantes a primer palo.',
+                    positions: [
+                        { id: 1, type: 'defender', x: 75, y: 40, label: 'CB1' },
+                        { id: 2, type: 'defender', x: 75, y: 60, label: 'CB2' },
+                        { id: 3, type: 'attacker', x: 80, y: 48, label: '9' },
+                        { id: 4, type: 'goalkeeper', x: 92, y: 50, label: 'GK' },
+                        { id: 5, type: 'attacker', x: 45, y: 15, label: 'Wing' },
+                        { id: 6, type: 'ball', x: 48, y: 18, label: '' }
+                    ]
+                },
+                guidedQuestions: [
+                    "¿Atacas la pelota en el punto más alto o esperas que el balón te llegue?",
+                    "¿Hacia qué zonas es peligroso dejar un rechazo corto?",
+                    "¿Cómo utilizas los brazos para medir la distancia con el delantero sin cometer falta?"
+                ]
+            }
+        ];
+
+        const POSITIONAL_HABITS = [
+            {
+                position: 'Laterales',
+                icon: 'move-horizontal',
+                imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&q=80',
+                habits: [
+                    'Perfilación a 45° con la espalda pegada a la línea de banda para dominar visualmente 180° del campo.',
+                    'Control orientado con la pierna alejada para ganar metros en el primer toque.',
+                    'Lectura de desborde por fuera (overlap) o incorporación por dentro (underlap) según la posición del extremo.',
+                    'Vigilancia del extremo opuesto cuando el ataque rueda por la banda contraria.'
+                ]
+            },
+            {
+                position: 'Centrales',
+                icon: 'shield',
+                imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80',
+                habits: [
+                    'Conducción frontal para fijar al primer rival y generar superioridad a sus espaldas.',
+                    'Vigilancia ofensiva estrecha sobre el "9" rival mientras el equipo propio ataca.',
+                    'Comunicación constante para achicar la línea defensiva en bloque.',
+                    'Orientación del cuerpo hacia el perfil hábil del delantero rival en duelos individuales.'
+                ]
+            },
+            {
+                position: 'Mediocentros / Pivotes (5 y 8)',
+                icon: 'compass',
+                imageUrl: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=600&q=80',
+                habits: [
+                    'Escaneo constante de hombros (scanning) antes de recibir el balón (mínimo 2 miradas previas).',
+                    'Giros orientados utilizando la pierna lejana a la presión.',
+                    'Fomentar la regla del "Tercer Hombre" jugando a 1 o 2 toques.',
+                    'Cobertura de espacios a espaldas de laterales cuando se proyectan al ataque.'
+                ]
+            },
+            {
+                position: 'Extremos',
+                icon: 'zap',
+                imageUrl: 'https://images.unsplash.com/photo-1560272564-c83b66b1ad12?auto=format&fit=crop&w=600&q=80',
+                habits: [
+                    'Mantenimiento de la amplitud máxima para estirar la defensa rival.',
+                    'Atacar los duelos 1v1 con cambio de ritmo y pie dominante orientado hacia el arco.',
+                    'Ataque al segundo palo cuando el centro viene desde el lado opuesto.',
+                    'Presión tras pérdida en los primeros 3 a 5 segundos.'
+                ]
+            },
+            {
+                position: 'Delanteros (9)',
+                icon: 'target',
+                imageUrl: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=600&q=80',
+                habits: [
+                    'Desmarques de apoyo y ruptura a contrapaso para desairar al marcador.',
+                    'Fijación permanente de los marcadores centrales para crear espacios interlineales.',
+                    'Juego de espaldas dando apoyos de cara limpios y rápidos a un toque.',
+                    'Acomodar el cuerpo para rematar de primera dentro del área.'
+                ]
+            },
+            {
+                position: 'Arqueros',
+                icon: 'crosshair',
+                imageUrl: 'https://images.unsplash.com/photo-1517747614396-d21a78b850e8?auto=format&fit=crop&w=600&q=80',
+                habits: [
+                    'Ubicación como vértice de apoyo libre (triangulación) en la salida de balón.',
+                    'Comunicación orientativa alta sobre la línea de marcación defensiva.',
+                    'Achique rápido manteniendo postura baja y brazos extendidos en duelos directos.',
+                    'Reinicio rápido de juego tras captura para pescar transiciones vacías.'
+                ]
+            }
+        ];
+
+        // Módulo de Pizarra Táctica Dibujable (Canvas)
+        function InteractiveBoard() {
+            const canvasRef = useRef(null);
+            const [isDrawing, setIsDrawing] = useState(false);
+            const [tool, setTool] = useState('pen'); // 'pen', 'arrow', 'clear'
+            const [color, setColor] = useState('#ffffff');
+            const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                drawPitchBackground(ctx, canvas.width, canvas.height);
+            }, []);
+
+            const drawPitchBackground = (ctx, w, h) => {
+                ctx.fillStyle = '#15803d';
+                ctx.fillRect(0, 0, w, h);
+                ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+                ctx.lineWidth = 2;
+
+                ctx.strokeRect(10, 10, w - 20, h - 20);
+                ctx.beginPath();
+                ctx.moveTo(w / 2, 10);
+                ctx.lineTo(w / 2, h - 10);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(w / 2, h / 2, 40, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.strokeRect(10, h / 4, 50, h / 2);
+                ctx.strokeRect(w - 60, h / 4, 50, h / 2);
+            };
+
+            const startDraw = (e) => {
+                const rect = canvasRef.current.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - rect.left;
+                const y = (e.clientY || e.touches[0].clientY) - rect.top;
+                setIsDrawing(true);
+                setStartPos({ x, y });
+            };
+
+            const draw = (e) => {
+                if (!isDrawing) return;
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - rect.left;
+                const y = (e.clientY || e.touches[0].clientY) - rect.top;
+
+                if (tool === 'pen') {
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(startPos.x, startPos.y);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    setStartPos({ x, y });
+                }
+            };
+
+            const endDraw = (e) => {
+                if (!isDrawing) return;
+                if (tool === 'arrow') {
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    const rect = canvas.getBoundingClientRect();
+                    const x = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - rect.left;
+                    const y = (e.changedTouches ? e.changedTouches[0].clientY : e.clientY) - rect.top;
+
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(startPos.x, startPos.y);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+
+                    const angle = Math.atan2(y - startPos.y, x - startPos.x);
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x - 10 * Math.cos(angle - Math.PI / 6), y - 10 * Math.sin(angle - Math.PI / 6));
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x - 10 * Math.cos(angle + Math.PI / 6), y - 10 * Math.sin(angle + Math.PI / 6));
+                    ctx.stroke();
+                }
+                setIsDrawing(false);
+            };
+
+            const clearBoard = () => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                drawPitchBackground(ctx, canvas.width, canvas.height);
+            };
+
+            return (
+                <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-charcoal p-2 rounded-lg border border-charcoal-border">
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setTool('pen')} className={`px-3 py-1.5 text-xs font-bold rounded flex items-center gap-1 ${tool === 'pen' ? 'bg-pitch text-white' : 'bg-charcoal-card text-gray-300'}`}>
+                                <Icon name="pen-tool" className="w-3.5 h-3.5" /> Lápiz
+                            </button>
+                            <button onClick={() => setTool('arrow')} className={`px-3 py-1.5 text-xs font-bold rounded flex items-center gap-1 ${tool === 'arrow' ? 'bg-pitch text-white' : 'bg-charcoal-card text-gray-300'}`}>
+                                <Icon name="arrow-up-right" className="w-3.5 h-3.5" /> Flecha
+                            </button>
+                            <div className="flex items-center gap-1 ml-2">
+                                {['#ffffff', '#4ade80', '#facc15', '#ef4444', '#3b82f6'].map(c => (
+                                    <button key={c} onClick={() => setColor(c)} style={{ backgroundColor: c }} className={`w-5 h-5 rounded-full border ${color === c ? 'border-white scale-110' : 'border-transparent'}`} />
+                                ))}
+                            </div>
+                        </div>
+                        <button onClick={clearBoard} className="bg-red-900/40 hover:bg-red-800 text-red-300 px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1">
+                            <Icon name="trash-2" className="w-3.5 h-3.5" /> Limpiar
+                        </button>
+                    </div>
+                    <canvas
+                        ref={canvasRef}
+                        onMouseDown={startDraw}
+                        onMouseMove={draw}
+                        onMouseUp={endDraw}
+                        onTouchStart={startDraw}
+                        onTouchMove={draw}
+                        onTouchEnd={endDraw}
+                        className="w-full aspect-[16/9] max-h-[350px] rounded-xl border border-white/20 shadow-xl cursor-crosshair touch-none"
+                    />
+                </div>
+            );
+        }
+
+        // Timer Module
+        function SessionTimer() {
+            const [seconds, setSeconds] = useState(300);
+            const [isActive, setIsActive] = useState(false);
+
+            useEffect(() => {
+                let interval = null;
+                if (isActive && seconds > 0) {
+                    interval = setInterval(() => setSeconds(s => s - 1), 1000);
+                } else if (seconds === 0) {
+                    setIsActive(false);
+                }
+                return () => clearInterval(interval);
+            }, [isActive, seconds]);
+
+            const formatTime = (sec) => {
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            };
+
+            return (
+                <div className="bg-charcoal p-4 rounded-xl border border-charcoal-border flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                        <Icon name="timer" className="text-pitch-light w-5 h-5" />
+                        <div>
+                            <span className="text-xs text-gray-400 font-semibold uppercase block">Temporizador de Bloque</span>
+                            <span className="text-2xl font-black font-mono text-white tracking-widest">{formatTime(seconds)}</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setIsActive(!isActive)} className={`px-4 py-1.5 rounded-lg text-xs font-bold ${isActive ? 'bg-amber-500 text-black' : 'bg-pitch text-white'}`}>
+                            {isActive ? 'Pausar' : 'Iniciar'}
+                        </button>
+                        <button onClick={() => { setIsActive(false); setSeconds(300); }} className="bg-charcoal-card border border-charcoal-border text-gray-300 px-3 py-1.5 rounded-lg text-xs font-bold">
+                            5 min
+                        </button>
+                        <button onClick={() => { setIsActive(false); setSeconds(600); }} className="bg-charcoal-card border border-charcoal-border text-gray-300 px-3 py-1.5 rounded-lg text-xs font-bold">
+                            10 min
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('planner');
+            const [generatedDrill, setGeneratedDrill] = useState(PRESET_DRILLS[0]);
+            const [isSimulating, setIsSimulating] = useState(false);
+            const [showModal, setShowModal] = useState(false);
+            const [selectedImage, setSelectedImage] = useState(null);
+
+            const [evaluationData, setEvaluationData] = useState({
+                playerName: '',
+                category: 'Juveniles',
+                perfiles: 3,
+                escaneo: 3,
+                contencion: 3,
+                decisiones: 3
+            });
+
+            const [cycleType, setCycleType] = useState('Sesión Única');
+            const [category, setCategory] = useState('Juveniles');
+            const [focus, setFocus] = useState('Duelos 1v1 / Transiciones');
+            const [customConcept, setCustomConcept] = useState('');
+
+            const handleGenerate = (e) => {
+                e.preventDefault();
+                let newDrill = {
+                    id: `custom-${Date.now()}`,
+                    title: customConcept ? `Entrenamiento: ${customConcept}` : `Plan de ${focus} (${category})`,
+                    category: category,
+                    focus: focus,
+                    type: cycleType,
+                    imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=800&q=80',
+                    warmup: `Calentamiento dinámico adaptado a ${focus} con movimientos específicos (15 min).`,
+                    mainTask: `Tarea Principal: Ejercicio estructurado enfocando "${customConcept || focus}". Corrección de posturas y rápida toma de decisiones.`,
+                    applicationGame: `Juego Aplicativo: Partido condicionado 7v7 estimulando consignas de ${focus}.`,
+                    cooldown: `Vuelta a la calma: Elongación profunda y retroalimentación cognitiva (10 min).`,
+                    fieldData: {
+                        dimensions: '30m x 20m adaptado.',
+                        players: '12 a 16 jugadores.',
+                        materials: 'Conos, pecheras, balones.',
+                        variations: 'Ajustar restricción de toques o comodines.',
+                        positions: [
+                            { id: 1, type: 'attacker', x: 25, y: 40, label: 'A1' },
+                            { id: 2, type: 'attacker', x: 25, y: 60, label: 'A2' },
+                            { id: 3, type: 'defender', x: 65, y: 50, label: 'D1' },
+                            { id: 4, type: 'joker', x: 45, y: 20, label: 'C1' },
+                            { id: 5, type: 'ball', x: 30, y: 45, label: '' }
+                        ]
+                    },
+                    guidedQuestions: [
+                        "¿Cómo te orientas antes de recibir la pelota para ganar tiempo?",
+                        "¿Qué lectura haces de la presión rival antes de decidir el pase?",
+                        "¿Cuál es el mejor perfil para reaccionar si perdemos la posesión?"
+                    ]
+                };
+                setGeneratedDrill(newDrill);
+            };
+
+            const toggleSimulation = () => setIsSimulating(!isSimulating);
+            const loadPresetSession = (session) => { setGeneratedDrill(session); setActiveTab('planner'); };
+            const printFicha = () => window.print();
+
+            return (
+                <div className="min-h-screen pb-16 flex flex-col">
+                    <header className="fixed top-0 left-0 right-0 z-50 bg-charcoal/95 backdrop-blur-md border-b border-charcoal-border no-print">
+                        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+                            <div className="flex items-center justify-between h-16">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-pitch rounded-lg text-white font-bold text-xl flex items-center justify-center shadow-lg shadow-pitch/20">
+                                        <Icon name="activity" className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <span className="text-lg font-black tracking-wider text-white block leading-none">TACTIX<span className="text-pitch-light">PRO</span></span>
+                                        <span className="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Formación & Táctica DT</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <nav className="flex space-x-1 overflow-x-auto no-scrollbar pb-2 text-xs font-semibold">
+                                {[
+                                    { id: 'planner', label: 'Planificador', icon: 'cpu' },
+                                    { id: 'defensive', label: 'Gestos Defensivos', icon: 'shield' },
+                                    { id: 'methodology', label: 'Metodología', icon: 'git-merge' },
+                                    { id: 'habits', label: 'Manual Hábitos', icon: 'book-open' },
+                                    { id: 'school', label: 'Escuela DT', icon: 'graduation-cap' },
+                                    { id: 'sessions', label: 'Sesiones Listas', icon: 'layers' }
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg whitespace-nowrap transition-all duration-200 ${
+                                            activeTab === tab.id
+                                                ? 'bg-pitch text-white shadow-md shadow-pitch/30'
+                                                : 'bg-charcoal-card text-gray-400 hover:text-white hover:bg-charcoal-hover'
+                                        }`}
+                                    >
+                                        <Icon name={tab.icon} className="w-4 h-4" />
+                                        <span>{tab.label}</span>
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-28 pb-12">
+                        
+                        {activeTab === 'planner' && (
+                            <div className="space-y-6">
+                                <div className="bg-charcoal-card border border-charcoal-border rounded-xl p-4 sm:p-6 shadow-xl no-print">
+                                    <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                                        <Icon name="sliders" className="text-pitch-light" />
+                                        Generador Inteligente de Tareas Tácticas
+                                    </h2>
+                                    <form onSubmit={handleGenerate} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-400 mb-1">Tipo de Ciclo</label>
+                                            <select value={cycleType} onChange={(e) => setCycleType(e.target.value)} className="w-full bg-charcoal border border-charcoal-border rounded-lg px-3 py-2 text-sm text-white">
+                                                <option>Sesión Única</option>
+                                                <option>Microciclo (Semanal)</option>
+                                                <option>Mesociclo (Mensual)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-400 mb-1">Categoría</label>
+                                            <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-charcoal border border-charcoal-border rounded-lg px-3 py-2 text-sm text-white">
+                                                <option>Infantiles</option>
+                                                <option>Juveniles</option>
+                                                <option>Amateur</option>
+                                                <option>Primera</option>
+                                                <option>Arqueros</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-400 mb-1">Foco Principal</label>
+                                            <select value={focus} onChange={(e) => setFocus(e.target.value)} className="w-full bg-charcoal border border-charcoal-border rounded-lg px-3 py-2 text-sm text-white">
+                                                <option>Táctico</option>
+                                                <option>Físico-Técnico</option>
+                                                <option>Duelos 1v1 / Transiciones</option>
+                                                <option>Perfilación y Hábitos Posicionales</option>
+                                            </select>
+                                        </div>
+                                        <div className="md:col-span-3">
+                                            <label className="block text-xs font-medium text-gray-400 mb-1">Concepto Específico o Consigna Libre</label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Ej. Laterales recibiendo perfilados a 45° con salida rápida"
+                                                value={customConcept}
+                                                onChange={(e) => setCustomConcept(e.target.value)}
+                                                className="w-full bg-charcoal border border-charcoal-border rounded-lg px-3 py-2 text-sm text-white"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-3 flex justify-end">
+                                            <button type="submit" className="w-full sm:w-auto bg-pitch hover:bg-pitch-dark text-white font-bold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-pitch/20 text-sm">
+                                                <Icon name="sparkles" className="w-4 h-4" /> Diseñar Rutina Personalizada
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                {generatedDrill && (
+                                    <div className="bg-charcoal-card border border-charcoal-border rounded-xl p-4 sm:p-6 shadow-xl print-card space-y-6">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-charcoal-border pb-4 gap-2">
+                                            <div>
+                                                <span className="text-xs font-bold text-pitch-accent uppercase tracking-wider">{generatedDrill.category} • {generatedDrill.focus}</span>
+                                                <h1 className="text-xl sm:text-2xl font-black text-white">{generatedDrill.title}</h1>
+                                            </div>
+                                            <div className="flex items-center gap-2 no-print">
+                                                <button onClick={() => setShowModal(true)} className="bg-charcoal border border-charcoal-border hover:bg-charcoal-hover text-gray-200 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                                                    <Icon name="file-text" className="w-4 h-4 text-pitch-light" /> Ficha Técnica
+                                                </button>
+                                                <button onClick={printFicha} className="bg-pitch hover:bg-pitch-dark text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md">
+                                                    <Icon name="printer" className="w-4 h-4" /> Imprimir
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <SessionTimer />
+
+                                        {/* Pitch and Image split */}
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                            <div className="lg:col-span-2 space-y-2">
+                                                <div className="flex items-center justify-between no-print">
+                                                    <h3 className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                                                        <Icon name="map" className="text-pitch-light" /> Esquema Táctico 2D Interactivo
+                                                    </h3>
+                                                    <button onClick={toggleSimulation} className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all ${isSimulating ? 'bg-amber-500 text-black' : 'bg-pitch/20 text-pitch-light border border-pitch/30'}`}>
+                                                        <Icon name={isSimulating ? "pause" : "play"} className="w-3.5 h-3.5" />
+                                                        {isSimulating ? 'Pausar' : 'Simular Jugada'}
+                                                    </button>
+                                                </div>
+
+                                                <div className="relative w-full aspect-[16/9] max-h-[350px] pitch-pattern border-2 border-white/30 rounded-xl overflow-hidden shadow-2xl flex items-center justify-center">
+                                                    <div className="absolute inset-2 border border-white/40 rounded"></div>
+                                                    <div className="absolute left-1/2 top-2 bottom-2 w-0 border-r border-white/40"></div>
+                                                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border border-white/40 rounded-full"></div>
+
+                                                    {generatedDrill.fieldData.positions.map((pos) => {
+                                                        let animStyle = {};
+                                                        if (isSimulating) {
+                                                            if (pos.type === 'attacker') animStyle = { transform: 'translate(40px, -20px)', transition: 'transform 2s ease-in-out infinite alternate' };
+                                                            else if (pos.type === 'defender') animStyle = { transform: 'translate(-30px, 15px)', transition: 'transform 2s ease-in-out infinite alternate' };
+                                                            else if (pos.type === 'ball') animStyle = { transform: 'translate(120px, 10px)', transition: 'transform 2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate' };
+                                                        }
+                                                        return (
+                                                            <div key={pos.id} style={{ left: `${pos.x}%`, top: `${pos.y}%`, ...animStyle }} className={`absolute -translate-x-1/2 -translate-y-1/2 font-bold text-[10px] rounded-full flex items-center justify-center shadow-lg ${pos.type === 'attacker' ? 'w-6 h-6 bg-blue-600 text-white' : pos.type === 'defender' ? 'w-6 h-6 bg-red-600 text-white' : pos.type === 'joker' ? 'w-6 h-6 bg-yellow-400 text-black' : 'w-4 h-4 bg-white border border-black'}`}>
+                                                                {pos.type === 'ball' ? '⚽' : pos.label}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            {/* Reference Image */}
+                                            <div className="space-y-2">
+                                                <h3 className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                                                    <Icon name="image" className="text-pitch-light" /> Imagen de Referencia de Campo
+                                                </h3>
+                                                <div 
+                                                    onClick={() => setSelectedImage(generatedDrill.imageUrl)}
+                                                    className="relative aspect-[16/9] lg:aspect-auto lg:h-[350px] rounded-xl overflow-hidden border border-charcoal-border cursor-pointer group shadow-xl"
+                                                >
+                                                    <img src={generatedDrill.imageUrl} alt="Ejercicio" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs font-bold text-white">
+                                                        Ampliar Imagen
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Canvas Drawing Board */}
+                                        <div className="space-y-2 pt-2 border-t border-charcoal-border">
+                                            <h3 className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                                                <Icon name="pen-tool" className="text-pitch-light" /> Pizarra Táctica Libre (Dibujar con Dedo/Mouse)
+                                            </h3>
+                                            <InteractiveBoard />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm">
+                                            <div className="bg-charcoal p-3.5 rounded-lg border border-charcoal-border">
+                                                <span className="font-bold text-pitch-light uppercase block text-[11px] mb-1">1. Calentamiento (12-15m)</span>
+                                                <p className="text-gray-300">{generatedDrill.warmup}</p>
+                                            </div>
+                                            <div className="bg-charcoal p-3.5 rounded-lg border border-charcoal-border">
+                                                <span className="font-bold text-pitch-light uppercase block text-[11px] mb-1">2. Tarea Principal</span>
+                                                <p className="text-gray-300">{generatedDrill.mainTask}</p>
+                                            </div>
+                                            <div className="bg-charcoal p-3.5 rounded-lg border border-charcoal-border">
+                                                <span className="font-bold text-pitch-light uppercase block text-[11px] mb-1">3. Juego Aplicativo</span>
+                                                <p className="text-gray-300">{generatedDrill.applicationGame}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-charcoal/80 border-l-4 border-pitch p-4 rounded-r-lg space-y-2">
+                                            <h4 className="text-xs font-bold uppercase text-pitch-light tracking-wide flex items-center gap-1.5">
+                                                <Icon name="help-circle" className="w-4 h-4" /> Preguntas de Descubrimiento Guiado
+                                            </h4>
+                                            <ul className="list-disc list-inside text-xs sm:text-sm text-gray-300 space-y-1">
+                                                {generatedDrill.guidedQuestions.map((q, idx) => (
+                                                    <li key={idx} className="italic">"{q}"</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'defensive' && (
+                            <div className="space-y-6">
+                                <div className="bg-gradient-to-r from-charcoal-card via-charcoal to-charcoal-card border border-charcoal-border rounded-xl p-4 sm:p-6 shadow-xl">
+                                    <h2 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                        <Icon name="shield-alert" className="text-pitch-light" />
+                                        Estadísticas de Concientización Defensiva
+                                    </h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                                        <div className="bg-charcoal p-4 rounded-lg border border-charcoal-border flex items-center gap-4">
+                                            <div className="text-3xl font-black text-pitch-light">50%</div>
+                                            <p className="text-xs text-gray-300">Del partido el equipo no tiene la pelota. Saber defender sin cometer falta es clave.</p>
+                                        </div>
+                                        <div className="bg-charcoal p-4 rounded-lg border border-charcoal-border flex items-center gap-4">
+                                            <div className="text-3xl font-black text-pitch-light">95%</div>
+                                            <p className="text-xs text-gray-300">Del tiempo el jugador corre sin balón. La postura y los perfilamientos evitan situaciones de gol.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-charcoal-card border border-charcoal-border rounded-xl p-5 shadow-lg space-y-3">
+                                        <h3 className="font-bold text-pitch-light text-base flex items-center gap-2">
+                                            <Icon name="user-check" /> 1. Contención Frontal (4 Pasos)
+                                        </h3>
+                                        <ol className="space-y-2 text-xs sm:text-sm text-gray-300 list-decimal list-inside">
+                                            <li><strong className="text-white">Aproximación:</strong> Carrera rápida desacelerada hacia el rival.</li>
+                                            <li><strong className="text-white">Freno Diagonal:</strong> Detenerse a ~1m en perfil semi-perpendicular.</li>
+                                            <li><strong className="text-white">Contención Activa:</strong> Centro de gravedad bajo sin tirarse al suelo.</li>
+                                            <li><strong className="text-white">Amague:</strong> Fintas para forzar el error del rival.</li>
+                                        </ol>
+                                    </div>
+
+                                    <div className="bg-charcoal-card border border-charcoal-border rounded-xl p-5 shadow-lg space-y-3">
+                                        <h3 className="font-bold text-pitch-light text-base flex items-center gap-2">
+                                            <Icon name="user-x" /> 2. Contención de Espaldas
+                                        </h3>
+                                        <ul className="space-y-2 text-xs sm:text-sm text-gray-300 list-disc list-inside">
+                                            <li><strong className="text-white">No anticipar compulsivamente:</strong> Evitar faltas innecesarias.</li>
+                                            <li><strong className="text-white">Apoyo del antebrazo:</strong> Usarlo en la espalda del rival para medir distancias.</li>
+                                            <li><strong className="text-white">Bloqueo de giro:</strong> Piernas firmes cerrando el perfil interno.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'methodology' && (
+                            <div className="bg-charcoal-card border border-charcoal-border rounded-xl p-5 shadow-xl space-y-4">
+                                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <Icon name="git-merge" className="text-pitch-light" />
+                                    Progresión Pedagógica de Campo
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {[
+                                        { step: '01', title: 'Trabajo Analítico', desc: 'Aislamiento rígido del gesto sin oposición.' },
+                                        { step: '02', title: 'Trabajo General', desc: 'Gesto aplicado en juegos reducidos sin puestos fijos.' },
+                                        { step: '03', title: 'Trabajo Específico', desc: 'Inclusión de zonas, roles y oposición real.' },
+                                        { step: '04', title: 'Trabajo Posicional', desc: 'Aplicación en el sistema real de juego.' }
+                                    ].map((m) => (
+                                        <div key={m.step} className="bg-charcoal p-4 rounded-xl border border-charcoal-border">
+                                            <span className="text-2xl font-black text-pitch-light/40 block mb-1">{m.step}</span>
+                                            <h3 className="font-bold text-white text-sm">{m.title}</h3>
+                                            <p className="text-xs text-gray-400 mt-2">{m.desc}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'habits' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {POSITIONAL_HABITS.map((item, idx) => (
+                                    <div key={idx} className="bg-charcoal-card border border-charcoal-border rounded-xl overflow-hidden shadow-lg flex flex-col justify-between">
+                                        <div className="h-32 relative overflow-hidden">
+                                            <img src={item.imageUrl} alt={item.position} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-charcoal-card to-transparent"></div>
+                                            <h3 className="absolute bottom-2 left-4 font-bold text-white flex items-center gap-2 text-base">
+                                                <Icon name={item.icon} className="text-pitch-light" /> {item.position}
+                                            </h3>
+                                        </div>
+                                        <div className="p-4 space-y-2">
+                                            <ul className="space-y-1.5 text-xs text-gray-300">
+                                                {item.habits.map((h, i) => (
+                                                    <li key={i} className="flex items-start gap-1.5">
+                                                        <span className="text-pitch-light font-bold">•</span>
+                                                        <span>{h}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div className="p-4 pt-0">
+                                            <button 
+                                                onClick={() => {
+                                                    setFocus('Perfilación y Hábitos Posicionales');
+                                                    setCustomConcept(`Hábitos posicionales para ${item.position}`);
+                                                    setActiveTab('planner');
+                                                }}
+                                                className="w-full bg-charcoal border border-charcoal-border hover:bg-pitch hover:text-white text-gray-300 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1"
+                                            >
+                                                <Icon name="plus-circle" className="w-3.5 h-3.5" /> Cargar en Generador
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {activeTab === 'school' && (
+                            <div className="space-y-6">
+                                <div className="bg-charcoal-card border border-charcoal-border rounded-xl p-5 shadow-xl space-y-4">
+                                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <Icon name="graduation-cap" className="text-pitch-light" /> Mando Directo vs. Descubrimiento Guiado
+                                    </h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                                        <div className="bg-charcoal p-4 rounded-lg border border-charcoal-border space-y-2">
+                                            <h3 className="font-bold text-red-400 uppercase text-xs">Mando Directo</h3>
+                                            <p className="text-gray-300">El DT da la respuesta masticada. Baja comprensión táctica a largo plazo.</p>
+                                        </div>
+                                        <div className="bg-charcoal p-4 rounded-lg border border-pitch/40 space-y-2">
+                                            <h3 className="font-bold text-pitch-light uppercase text-xs">Descubrimiento Guiado</h3>
+                                            <p className="text-gray-300">El DT realiza preguntas para estimular la toma de decisiones autónoma.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'sessions' && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {PRESET_DRILLS.map((session, idx) => (
+                                    <div key={session.id} className="bg-charcoal-card border border-charcoal-border rounded-xl overflow-hidden shadow-lg flex flex-col justify-between">
+                                        <div className="h-36 relative overflow-hidden">
+                                            <img src={session.imageUrl} alt={session.title} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-charcoal-card to-transparent"></div>
+                                            <span className="absolute top-2 left-2 bg-pitch text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                                                Sesión 0{idx + 1}
+                                            </span>
+                                        </div>
+                                        <div className="p-4 space-y-2">
+                                            <h3 className="font-bold text-white text-sm">{session.title}</h3>
+                                            <p className="text-xs text-gray-400"><strong>Foco:</strong> {session.focus}</p>
+                                        </div>
+                                        <div className="p-4 pt-0">
+                                            <button onClick={() => loadPresetSession(session)} className="w-full bg-pitch hover:bg-pitch-dark text-white py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 shadow-md">
+                                                <Icon name="arrow-right-circle" className="w-4 h-4" /> Cargar Sesión
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                    </main>
+
+                    {/* Image View Modal */}
+                    {selectedImage && (
+                        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 no-print" onClick={() => setSelectedImage(null)}>
+                            <div className="relative max-w-4xl w-full">
+                                <img src={selectedImage} alt="Ampliación" className="w-full h-auto rounded-xl border border-white/20" />
+                                <button onClick={() => setSelectedImage(null)} className="absolute top-2 right-2 bg-charcoal text-white p-2 rounded-full">
+                                    <Icon name="x" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Ficha Técnica Modal */}
+                    {showModal && generatedDrill && (
+                        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-charcoal-card border border-charcoal-border w-full max-w-lg rounded-xl p-6 space-y-4 shadow-2xl">
+                                <div className="flex items-center justify-between border-b border-charcoal-border pb-3">
+                                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                                        <Icon name="file-text" className="text-pitch-light" /> Ficha Técnica Completa
+                                    </h3>
+                                    <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white"><Icon name="x" /></button>
+                                </div>
+                                <div className="space-y-3 text-xs sm:text-sm text-gray-300">
+                                    <p><strong className="text-white">Dimensiones:</strong> {generatedDrill.fieldData.dimensions}</p>
+                                    <p><strong className="text-white">Jugadores:</strong> {generatedDrill.fieldData.players}</p>
+                                    <p><strong className="text-white">Materiales:</strong> {generatedDrill.fieldData.materials}</p>
+                                    <p><strong className="text-white">Variantes:</strong> {generatedDrill.fieldData.variations}</p>
+                                </div>
+                                <div className="pt-2 flex justify-end">
+                                    <button onClick={() => setShowModal(false)} className="bg-pitch text-white px-4 py-2 rounded-lg text-xs font-bold">Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="mt-auto py-4 border-t border-charcoal-border text-center text-xs text-gray-500 no-print">
+                        TactixPro © 2026 - Plataforma de Formación e Inteligencia Táctica para Entrenadores.
+                    </footer>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
